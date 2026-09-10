@@ -1,0 +1,42 @@
+# =====================================================================
+#  Beispiel: panel_power_init auf einem ESP32-P4 + Waveshare
+#  10.1-DSI-TOUCH-A
+#
+#  Zum Ausprobieren/Kopieren gedacht - keine eigenständig lauffähige
+#  Konfiguration (kein board:, keine wifi:/api:). Setzt einen
+#  bestehenden Basisbau mit `i2c:` (der Bus, an dem der PMIC hängt -
+#  oft derselbe Bus wie ein Touch-Controller) und `display: platform:
+#  mipi_dsi` voraus. Real eingesetzt in
+#  github.com/CzarofAK/smartebl_display_esphome's smart-ebl-display.yaml.
+# =====================================================================
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/CzarofAK/panel_power_init
+      ref: main
+    refresh: 1d
+    components: [panel_power_init]
+
+i2c:
+  - id: bus_touch
+    sda: GPIO7
+    scl: GPIO8
+    scan: true  # vor dem Flashen prüfen: "Found device at address 0x45"?
+
+# Muss VOR dem display:-Block stehen (Lesereihenfolge), damit klar ist,
+# wofür er da ist - tatsächlich entscheidet aber setup_priority (siehe
+# README), nicht die Position in der YAML-Datei.
+panel_power_init:
+  i2c_id: bus_touch
+  address: 0x45
+
+esp_ldo:
+  - id: ldo_dsi
+    channel: 3
+    voltage: 2.5V
+
+display:
+  - platform: mipi_dsi
+    id: disp_main
+    model: WAVESHARE-10.1-DSI-TOUCH-A
