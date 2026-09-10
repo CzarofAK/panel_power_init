@@ -109,15 +109,24 @@ your board, and this component won't fix your crash as-is.
   earlier `setup()`) were both confirmed directly against ESPHome's own
   `esphome/core/i2c/i2c.h` and `esphome/core/component.h` source, not
   assumed.
-- **Not yet confirmed on real hardware end-to-end.** First real-world test
-  (on an ESP32-P4-WIFI6-POE-ETH + 10.1-DSI-TOUCH-A board, in
-  `smartebl_display_esphome`) reproduced the exact crash this component
-  targets, but a scan of that board's touch-controller I2C bus - even at
-  `logger: level: VERY_VERBOSE` - showed **no** `i2c.idf` scan output at
-  all (neither a "Scanning for devices" line nor any "Found device at
-  address 0x.." line), which is inconclusive rather than a clean
-  "0x45 not present" result: it doesn't confirm the PMIC is there, but it
-  also doesn't rule this fix out - something about why the scan itself
-  isn't logging anything is still open. Treat this component as untested
-  until that's resolved and a build with it applied is flashed and
-  confirmed to boot past `display.mipi_dsi`'s `setup()`.
+- **Confirmed working end-to-end on real hardware** (ESP32-P4-WIFI6-POE-ETH
+  + 10.1-DSI-TOUCH-A, in `smartebl_display_esphome`, 2026-09-10). Without
+  this component: reproducible hang right after
+  `display.mipi_dsi:024]: Running Setup`, task watchdog kill ~5s later.
+  With it: `panel_power_init:011]: Waking panel PMIC over I2C before DSI
+  init...` → `display.mipi_dsi:175]: MIPI DSI setup complete` → clean
+  boot through to Wi-Fi/Home Assistant. The board's own `i2c:` scan (once
+  it could actually run - see below) also confirmed the PMIC really is
+  at `0x45` on this board: `Found device at address 0x18` / `0x45` /
+  `0x5D`.
+- **The earlier "scan log shows nothing" mystery, resolved**: on the
+  *crashing* boot (before this component existed), the `i2c:` bus's own
+  `Found device at address 0x..` lines never appeared, which briefly
+  looked like it might mean no devices were responding at all. It didn't
+  - those lines are logged from ESPHome's global `dump_config()` pass,
+  which only runs after **every** component's `setup()` has completed.
+  Since `display.mipi_dsi`'s `setup()` was hanging (and then crashing)
+  before `dump_config()` was ever reached, the scan results - which had
+  actually already been captured during `i2c`'s own `setup()` - simply
+  never got a chance to print. Nothing was wrong with the scan itself;
+  it just couldn't be observed until the thing crashing it was fixed.
