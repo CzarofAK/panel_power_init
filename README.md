@@ -5,6 +5,11 @@ PMIC over I2C before `display.mipi_dsi` runs its own `setup()`. Written for
 the Waveshare **10.1-DSI-TOUCH-A** panel (JD9365, ESP32-P4 boards), as a
 workaround for [esphome/esphome#15564](https://github.com/esphome/esphome/issues/15564).
 
+> [!WARNING]
+> **Safety & liability / Sicherheit & Haftung** – Private hobby project, provided "as is" and used **at your own risk**.
+> This component writes raw values into the registers of a **power-management IC** on the display panel. The sequence is based on a single, unconfirmed report. Wrong values or wrong hardware can damage the panel or the board.
+> See [DISCLAIMER.md](DISCLAIMER.md) (EN/DE).
+
 ## The problem this works around
 
 On some ESP32-P4 + `WAVESHARE-10.1-DSI-TOUCH-A` boards, boot hangs right
@@ -130,3 +135,7 @@ your board, and this component won't fix your crash as-is.
   actually already been captured during `i2c`'s own `setup()` - simply
   never got a chance to print. Nothing was wrong with the scan itself;
   it just couldn't be observed until the thing crashing it was fixed.
+
+## License
+
+MIT, see [LICENSE](LICENSE). Use at your own risk – see [DISCLAIMER.md](DISCLAIMER.md).
